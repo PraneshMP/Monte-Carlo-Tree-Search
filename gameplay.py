@@ -25,13 +25,23 @@ def play_game(player_policies):
     current = root
     plies = 0
     for player_policy in player_policies:
-        if type(player_policy) is MCTSPolicy:
+         if type(player_policy) is MCTSPolicy:
             player_policy.reset_game()
 
     while game.winner() is None:
         for player_policy in player_policies:
             plies += 1
-            game.move(*player_policy.move(game))
+            game.domove(*player_policy.move(game,10000))
+            previous = current
+            G.add_node(str(game))
+            current = str(game)
+            G.add_edge(previous, current)
+            print(current)
+            if game.winner() is not None:
+                break
+            move=list(input())
+            move=[int(i) for i in move]
+            game.domove(*move)
             previous = current
             G.add_node(str(game))
             current = str(game)
@@ -41,5 +51,6 @@ def play_game(player_policies):
     print('Game over. Winner is {}.'.format(game.winner()))
     return G, game.winner()
 
-
-
+l=MCTSPolicy("X")
+G,R=play_game([l])
+print(G)

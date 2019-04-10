@@ -45,7 +45,7 @@ class MCTSPolicy():
         
         self.last_move = None
         
-    def move(self, start_state, simulations= 25):
+    def move(self, start_state, simulations= 250):
 
         root = None
         if self.last_move is not None:
@@ -62,19 +62,19 @@ class MCTSPolicy():
                 self.node_count += 1     
         else:      
             for node in self.graph.nodes():
-                if self.graph.node[node]['state'] == start_state:
+                if self.graph.node[node]['attr_dict']['state'] == start_state:
                     root = node
         for i in range(simulations):
             self.num_sim += 1
             selected_node = self.selection(root)
-            if self.graph.node[selected_node]['state'].winner():
+            if self.graph.node[selected_node]['attr_dict']['state'].winner():
                 break
             new_child_node = self.expansion(selected_node)
             reward = self.simulation(new_child_node)
             self.backpropagation(new_child_node, reward)
         move, resulting_node = self.best(root)
         self.last_move = resulting_node
-        if self.graph.node[resulting_node]['state'].winner():
+        if self.graph.node[resulting_node]['attr_dict']['state'].winner():
             self.last_move = None
         return move
 
@@ -83,11 +83,11 @@ class MCTSPolicy():
         children = self.graph.successors(root)
         mod_uct_val = {}
         for child_node in children:
-            mod_uct_val[child_node] = self.uct(child_node)
-        best_children = [key for key, val in mod_uct_val.iteritems() if val == max(mod_uct_val.values())]
+            mod_uct_val[child_node] = self.mod_uct(child_node)
+        best_children = [key for key, val in mod_uct_val.items() if val == max(mod_uct_val.values())]
         index = np.random.randint(len(best_children))
         best_child = best_children[index]
-        action = self.graph.get_edge_data(root, best_child)['action']
+        action = self.graph.get_edge_data(root, best_child)['attr_dict']['action']
         return action, best_child
 
     def selection(self, root):
@@ -96,7 +96,7 @@ class MCTSPolicy():
             self.graph.add_node(self.node_count,attr_dict={'w(s,a)': 0,'n(s,a)': 0,'uct(s,a)': 0,'expand': False,'state': root})
             self.node_count += 1
             return root
-        elif not self.graph.node[root]['expand']:
+        elif not self.graph.node[root]['attr_dict']['expand']:
              return root  
         else:
             children           = self.graph.successors(root)
@@ -109,14 +109,14 @@ class MCTSPolicy():
     def expansion(self, node):
         
         children        = self.graph.successors(node)
-        moves           = self.graph.node[node]['state'].legal_moves()
+        moves           = self.graph.node[node]['attr_dict']['state'].legal_moves()
         unvisited       = []
         actions         = []
         for move in moves:
-            child = self.graph.node[node]['state'].transition_function(*move)
+            child = self.graph.node[node]['attr_dict']['state'].transition_function(*move)
             in_children = False
             for child_node in children:
-                if self.graph.node[child_node]['state'] == child:
+                if self.graph.node[child_node]['attr_dict']['state'] == child:
                     in_children = True
             if not in_children:
                 unvisited.append(child)
@@ -130,15 +130,16 @@ class MCTSPolicy():
             self.node_count += 1
         else:
             return node
-        if len(children) + 1 == len(moves):
-            self.graph.node[node]['expand'] = True
+        
+        if len(list(children)) + 1 == len(moves):
+            self.graph.node[node]['attr_dict']['expand'] = True
 
         return child_node_id
 
     def simulation(self, node):
 
         random_policy = RandomPolicy()
-        current_state = self.graph.node[node]['state']
+        current_state = self.graph.node[node]['attr_dict']['state']
         while not current_state.winner():
             move = random_policy.move(current_state)
             current_state = current_state.transition_function(*move)
@@ -152,23 +153,23 @@ class MCTSPolicy():
 
         current = last_visited
         while True:
-            self.graph.node[current]['n(s,a)'] += 1
-            self.graph.node[current]['w(s,a)'] += reward
-            if self.graph.node[current]['state'] == GameState():
+            self.graph.node[current]['attr_dict']['n(s,a)'] += 1
+            self.graph.node[current]['attr_dict']['w(s,a)'] += reward
+            if self.graph.node[current]['attr_dict']['state'] == GameState():
                 break
             try:
-                current = self.graph.predecessors(current)[0]
+                current = list(self.graph.predecessors(current))[0]
             except IndexError:
                 break
 
-    def uct(self, state):
-        n = self.graph.node[state]['n(s,a)']  
-        w = self.graph.node[state]['w(s,a)'] 
+    def mod_uct(self, state):
+        n = self.graph.node[state]['attr_dict']['n(s,a)']  
+        w = self.graph.node[state]['attr_dict']['w(s,a)'] 
         t = self.num_sim
         c = self.uct_c
         epsilon = EPSILON
         exploitation_value = w / (n + epsilon)
         exploration_value = c * np.sqrt(np.log(t) / (n + epsilon))
         value = exploitation_value + exploration_value
-        self.graph.node[state]['uct(s,a)'] = value
+        self.graph.node[state]['attr_dict']['uct(s,a)'] = value
         return value

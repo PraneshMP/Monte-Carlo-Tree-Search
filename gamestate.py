@@ -5,7 +5,7 @@ Created on Tue Apr  9 15:17:53 2019
 @author: Pranesh
 """
 import numpy as np
-
+import copy
 
 class GameState(object):
 
@@ -14,7 +14,8 @@ class GameState(object):
         self.player="O"
         self.shape=3
         self.board = np.zeros((self.shape,self.shape),dtype=str)
-
+        self.board=np.where(self.board=='','~',self.board)
+        
     def __key(self):
         return self.__str__()
 
@@ -34,15 +35,16 @@ class GameState(object):
                     output += '{}'.format(contents)
                 else:
                     output += '{}\n'.format(contents)
-
-        output = output.replace('', '-')
+                    
         return output
 
     def turn(self):
         
-        return ("X","O")[self.player=="X"]
+        
+        self.player=("O","X")[self.player=="O"]
+        return self.player
 
-    def domove(self, move):
+    def domove(self, *move):
 
         self.board[move] = self.turn()
 
@@ -50,12 +52,14 @@ class GameState(object):
 
         if self.winner() is not None:
             return []
-        row,col=np.where(self.board=='')
+        row,col=np.where(self.board=='~')
         return  tuple(zip(row,col))
 
-    def transition_function(self, move):
+    def transition_function(self, *move):
 
-        self.domove(move)
+        new_state = copy.deepcopy(self)
+        new_state.domove(*move)
+        return new_state
 
     def winner(self):
 
@@ -66,8 +70,6 @@ class GameState(object):
             if(np.logical_or(np.all(np.diag(self.board)==comb,axis=0),np.all(np.diag(np.fliplr(self.board))==comb,axis=0))):
                 return player
 
-        return len(np.argwhere(self.board==''))
+        return (None,"Tie")[len(np.argwhere(self.board=='~'))==0]
             
-        
-    
-        
+  

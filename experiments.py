@@ -8,7 +8,7 @@ Created on Tue Apr  9 19:22:08 2019
 from gameplay import play_game
 from policies import RandomPolicy, MCTSPolicy
 from visualization import visualize_mcts_tree
-import networkx as nx
+
 import numpy as np
 
 # Choose the player policies here:
