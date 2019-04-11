@@ -8,7 +8,7 @@ Created on Tue Apr  9 19:19:35 2019
 import networkx as nx
 from gamestate import GameState
 from policies import MCTSPolicy
-
+from visualize import  visualize
 
 class StateNode(object):
     def __init__(self, board):
@@ -31,7 +31,7 @@ def play_game(player_policies):
     while game.winner() is None:
         for player_policy in player_policies:
             plies += 1
-            game.domove(*player_policy.move(game,10000))
+            game.domove(*player_policy.move(game,10))
             previous = current
             G.add_node(str(game))
             current = str(game)
@@ -48,9 +48,10 @@ def play_game(player_policies):
             G.add_edge(previous, current)
             if game.winner() is not None:
                 break
+            #visualize(G)
     print('Game over. Winner is {}.'.format(game.winner()))
     return G, game.winner()
 
 l=MCTSPolicy("X")
 G,R=play_game([l])
-print(G)
+#visualize(G)

@@ -9,6 +9,7 @@ import numpy as np
 import operator
 import networkx as nx
 from gamestate import GameState
+from visualize import  visualize
 
 EPSILON = 10e-6
 
@@ -45,7 +46,7 @@ class MCTSPolicy():
         
         self.last_move = None
         
-    def move(self, start_state, simulations= 250):
+    def move(self, start_state, simulations):
 
         root = None
         if self.last_move is not None:
@@ -76,6 +77,7 @@ class MCTSPolicy():
         self.last_move = resulting_node
         if self.graph.node[resulting_node]['attr_dict']['state'].winner():
             self.last_move = None
+        visualize(self.graph)
         return move
 
     def best(self, root):
