@@ -6,6 +6,4 @@ Created on Tue Apr  9 22:45:05 2019
 """
 
 policies.py 
--> selected node max value need to be argmax
--> same problem in best
--> Create a XO game
+-> strategy
